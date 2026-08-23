@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios'; // Atau instance axios API kamu
+import api from './api';
 
 export const useAuthStore = create((set) => ({
   user: JSON.parse(localStorage.getItem('user')) || null,
@@ -10,7 +10,7 @@ export const useAuthStore = create((set) => ({
   login: async (credentials) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.post('http://localhost:8000/api/login', credentials); // Sesuaikan URL API
+      const response = await api.post('/login', credentials);
       const resData = response.data;
 
       if (resData.success) {

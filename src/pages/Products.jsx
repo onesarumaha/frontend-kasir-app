@@ -24,8 +24,7 @@ const Products = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
 
-  // Ambil URL Base dari env atau fallback ke localhost Laravel
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     const getImageUrl = (product) => {
     if (!product) return null;
