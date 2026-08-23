@@ -9,11 +9,17 @@ import {
   Banknote, 
   QrCode, 
   CheckCircle,
-  Printer
+  Printer,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import api from '../api';
+import api, { API_BASE_URL } from '../api';
+import { useOutletContext } from 'react-router-dom';
+import { showAlert } from '../utils/sweetalert';
 
-const Pos = ({ isDarkMode }) => {
+  const Pos = () => {
+  const context = useOutletContext();
+  const isDarkMode = context?.isDarkMode ?? true;
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -27,7 +33,13 @@ const Pos = ({ isDarkMode }) => {
   const [fetchingProducts, setFetchingProducts] = useState(true);
   const [successData, setSuccessData] = useState(null);
 
-  // Styling Tema
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0,
+  });
+
   const theme = {
     bg: isDarkMode ? '#0d0d11' : '#f4f5f7',
     cardBg: isDarkMode ? '#14141e' : '#ffffff',
@@ -38,11 +50,6 @@ const Pos = ({ isDarkMode }) => {
     activeTab: '#2563eb',
   };
 
-  const getAuthHeader = () => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   // Initial Fetch Kategori
   useEffect(() => {
     fetchCategories();
@@ -50,14 +57,20 @@ const Pos = ({ isDarkMode }) => {
 
   // Fetch Produk saat Kategori yang dipilih berubah
   useEffect(() => {
-    fetchProducts(selectedCategory);
+    setPage(1);
+    fetchProducts(selectedCategory, 1);
   }, [selectedCategory]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.lastPage) {
+      setPage(newPage);
+      fetchProducts(selectedCategory, newPage);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
-      const res = await api.get('/categories', {
-        headers: getAuthHeader(),
-      });
+      const res = await api.get('/categories');
       if (res.data && res.data.data) {
         setCategories(res.data.data);
       }
@@ -66,23 +79,27 @@ const Pos = ({ isDarkMode }) => {
     }
   };
 
-  // Mengambil Produk dari Backend sesuai query category_id
-  const fetchProducts = async (categoryName) => {
+  const fetchProducts = async (categoryName = selectedCategory, pageNum = 1) => {
     setFetchingProducts(true);
     try {
-      let url = '/products';
+      let url = `/products?page=${pageNum}`;
       if (categoryName && categoryName !== 'ALL') {
-        url += `?category_id=${encodeURIComponent(categoryName)}`;
+        url += `&category_id=${encodeURIComponent(categoryName)}`;
       }
 
-      const res = await api.get(url, {
-        headers: getAuthHeader(),
+      const res = await api.get(url);
+      const responseData = res.data;
+
+      setProducts(responseData.data || []);
+
+      const meta = responseData.meta || responseData;
+
+      setPagination({
+        currentPage: meta.current_page || pageNum,
+        lastPage: meta.last_page || 1,
+        total: meta.total || 0,
       });
-      if (res.data && res.data.data) {
-        setProducts(res.data.data);
-      } else {
-        setProducts([]);
-      }
+
     } catch (err) {
       console.error('Gagal mengambil data produk:', err);
       setProducts([]);
@@ -148,71 +165,79 @@ const Pos = ({ isDarkMode }) => {
   const paymentAmount = parseFloat(payment) || 0;
   const change = paymentAmount - grandTotal;
 
-  // Filter Client-side untuk fitur Pencarian nama/barcode
+  // Filter Client-side untuk fitur Pencarian nama/barcode pada halaman aktif
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     (p.barcode && p.barcode.includes(search))
   );
 
-const handleCheckout = async () => {
-  if (cart.length === 0) return alert('Keranjang masih kosong!');
-  if (paymentAmount < grandTotal) return alert('Uang pembayaran kurang!');
-
-  setLoading(true);
-
-  const payload = {
-    total_item: totalItem,
-    subtotal: subtotal,
-    discount: parseFloat(discount) || 0,
-    tax: tax,
-    grand_total: grandTotal,
-    payment: paymentAmount,
-    change: change,
-    payment_method: paymentMethod,
-    note: note,
-    items: cart.map((item) => ({
-      product_id: item.product_id,
-      price: item.price,
-      qty: item.qty,
-      subtotal: item.subtotal,
-    })),
-  };
-
-  try {
-    // 1. Simpan Transaksi
-    const res = await api.post('/sales', payload, {
-      headers: getAuthHeader(),
-    });
-
-    // 2. Ambil Sale ID dari Respon Transaksi
-    const saleId = res.data?.data?.id || res.data?.id;
-
-    if (saleId) {
-      // 3. Request Data Struk dari Endpoint Backend
-      const receiptRes = await api.get(`/sales/${saleId}/receipt`, {
-        headers: getAuthHeader(),
-      });
-
-      if (receiptRes.data && receiptRes.data.data) {
-        setSuccessData(receiptRes.data.data);
-      }
-    } else {
-      // Fallback jika backend transaksi tidak mengembalikan ID
-      setSuccessData(res.data?.data || payload);
+  const handleCheckout = async () => {
+    if (cart.length === 0) {
+      showAlert('warning', 'Keranjang Kosong', 'Silakan pilih produk terlebih dahulu!');
+      return;
     }
 
-    // Reset Form & Refresh Stok
-    setCart([]);
-    setPayment('');
-    setNote('');
-    setDiscount(0);
-    fetchProducts(selectedCategory);
-  } catch (error) {
-    alert(error.response?.data?.message || 'Gagal memproses transaksi!');
-  } finally {
-    setLoading(false);
-  }
-};
+    if (paymentAmount < grandTotal) {
+      const shortage = grandTotal - paymentAmount;
+      showAlert(
+        'error', 
+        'Uang Pembayaran Kurang!', 
+        `Kekurangan pembayaran sebesar Rp ${shortage.toLocaleString('id-ID')}`
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      total_item: totalItem,
+      subtotal: subtotal,
+      discount: parseFloat(discount) || 0,
+      tax: tax,
+      grand_total: grandTotal,
+      payment: paymentAmount,
+      change: change,
+      payment_method: paymentMethod,
+      note: note,
+      items: cart.map((item) => ({
+        product_id: item.product_id,
+        price: item.price,
+        qty: item.qty,
+        subtotal: item.subtotal,
+      })),
+    };
+
+    try {
+      const res = await api.post('/sales', payload);
+      const saleId = res.data?.data?.id || res.data?.id;
+
+      if (saleId) {
+        const receiptRes = await api.get(`/sales/${saleId}/receipt`);
+        if (receiptRes.data && receiptRes.data.data) {
+          setSuccessData(receiptRes.data.data);
+        }
+      } else {
+        setSuccessData(res.data?.data || payload);
+      }
+
+      // Modal Transaksi Berhasil
+      showAlert('success', 'Transaksi Berhasil!', 'Pembayaran telah sukses diproses.');
+
+      setCart([]);
+      setPayment('');
+      setNote('');
+      setDiscount(0);
+      fetchProducts(selectedCategory, page);
+    } catch (error) {
+      showAlert(
+        'error', 
+        'Gagal Memproses Transaksi', 
+        error.response?.data?.message || 'Terjadi kesalahan sistem, silakan coba lagi.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -271,7 +296,33 @@ const handleCheckout = async () => {
           grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
           gap: 12px;
           overflow-y: auto;
-          max-height: calc(100vh - 180px);
+          max-height: calc(100vh - 230px);
+        }
+        .pagination-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 12px;
+          border-radius: 8px;
+          margin-top: auto;
+        }
+        .page-btn {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 5px 10px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+          border: 1px solid ${theme.border};
+          background-color: ${theme.inputBg};
+          color: ${theme.textPrimary};
+          transition: opacity 0.2s ease;
+        }
+        .page-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
         }
         .input-row {
           display: flex;
@@ -358,41 +409,135 @@ const handleCheckout = async () => {
           />
         </div>
 
-        {/* Grid Card Produk */}
         {fetchingProducts ? (
-          <div style={{ padding: '20px', color: theme.textSecondary, fontSize: '13px' }}>Memuat produk...</div>
-        ) : filteredProducts.length === 0 ? (
-          <div style={{ padding: '20px', color: theme.textSecondary, fontSize: '13px' }}>Produk tidak ditemukan.</div>
-        ) : (
-          <div className="product-grid">
-            {filteredProducts.map((product) => {
-              const price = parseFloat(product.selling_price) || 0;
-              return (
-                <div
-                  key={product.id}
-                  onClick={() => addToCart(product)}
-                  style={{
-                    ...styles.productCard,
-                    backgroundColor: theme.cardBg,
-                    borderColor: theme.border,
-                  }}
-                >
-                  <div style={{ ...styles.productCode, color: theme.textSecondary }}>{product.code || 'PRD'}</div>
-                  <div style={{ ...styles.productName, color: theme.textPrimary }} title={product.name}>
-                    {product.name}
+            <div style={{ padding: '20px', color: theme.textSecondary, fontSize: '13px' }}>Memuat produk...</div>
+          ) : filteredProducts.length === 0 ? (
+            <div style={{ padding: '20px', color: theme.textSecondary, fontSize: '13px' }}>Produk tidak ditemukan.</div>
+          ) : (
+            <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
+              {filteredProducts.map((product) => {
+                const price = parseFloat(product.selling_price) || 0;
+                
+                // Validasi gambar menggunakan API_BASE_URL dari api.js
+                const isValidImage = product.image && typeof product.image === 'string' && !product.image.includes('/tmp');
+                const isValidUrl = product.image_url && typeof product.image_url === 'string' && !product.image_url.includes('/tmp');
+
+                const imageUrl = isValidUrl 
+                  ? product.image_url 
+                  : (isValidImage ? `${API_BASE_URL}/storage/${product.image}` : null);
+                  
+                const imageDefault = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%2F%3E%3Ccircle%20cx%3D%228.5%22%20cy%3D%228.5%22%20r%3D%221.5%22%2F%3E%3Cpolyline%20points%3D%2221%2015%2016%2010%205%2021%22%2F%3E%3C%2Fsvg%3E';
+
+                return (
+                  <div
+                    key={product.id}
+                    onClick={() => addToCart(product)}
+                    style={{
+                      ...styles.productCard,
+                      backgroundColor: theme.cardBg,
+                      borderColor: theme.border,
+                      height: 'auto',
+                      minHeight: '220px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    {/* CONTAINER GAMBAR */}
+                    <div style={{
+                      width: '100%',
+                      height: '100px',
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                      backgroundColor: theme.inputBg,
+                      marginBottom: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: `1px solid ${theme.border}`,
+                      flexShrink: 0
+                    }}>
+                      <img 
+                        src={imageUrl || imageDefault} 
+                        alt={product.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: imageUrl ? 'cover' : 'center',
+                          opacity: imageUrl ? 1 : 0.4
+                        }}
+                        onError={(e) => {
+                          e.target.src = imageDefault;
+                          e.target.style.objectFit = 'center';
+                          e.target.style.opacity = '0.4';
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ ...styles.productCode, color: theme.textSecondary, fontSize: '10px', marginBottom: '2px', flexShrink: 0 }}>
+                      {product.code || 'PRD'}
+                    </div>
+                    
+                    <div 
+                      style={{ 
+                        ...styles.productName, 
+                        color: theme.textPrimary, 
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        lineHeight: '1.4',
+                        marginBottom: '10px',
+                        wordBreak: 'break-word',
+                        flexGrow: 1
+                      }} 
+                      title={product.name}
+                    >
+                      {product.name}
+                    </div>
+
+                    <div style={{ ...styles.productFooter, marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                      <span style={{ ...styles.productPrice, color: '#10b981', fontWeight: 'bold', fontSize: '12px' }}>
+                        Rp {price.toLocaleString('id-ID')}
+                      </span>
+                      <span style={{ ...styles.productStock, color: theme.textSecondary, fontSize: '10px' }}>
+                        Stok: {product.stock}
+                      </span>
+                    </div>
                   </div>
-                  <div style={styles.productFooter}>
-                    <span style={styles.productPrice}>Rp {price.toLocaleString('id-ID')}</span>
-                    <span style={{ ...styles.productStock, color: theme.textSecondary }}>Stok: {product.stock}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          )}
+
+        {pagination.lastPage > 1 && (
+          <div className="pagination-bar" style={{ backgroundColor: theme.cardBg, border: `1px solid ${theme.border}` }}>
+            <button
+              className="page-btn"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft size={14} />
+              <span>Sebelumnya</span>
+            </button>
+
+            <span style={{ fontSize: '11px', color: theme.textSecondary }}>
+              Halaman <b style={{ color: theme.textPrimary }}>{pagination.currentPage}</b> dari <b style={{ color: theme.textPrimary }}>{pagination.lastPage}</b> (Total {pagination.total} Produk)
+            </span>
+
+            <button
+              className="page-btn"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === pagination.lastPage}
+            >
+              <span>Selanjutnya</span>
+              <ChevronRight size={14} />
+            </button>
           </div>
         )}
       </div>
 
-      {/* KOLOM KANAN: PESANAN */}
       <div className="cart-section" style={{ backgroundColor: theme.cardBg }}>
         <div style={{ ...styles.cartHeader, borderColor: theme.border, color: theme.textPrimary }}>
           <ShoppingCart size={18} />
@@ -518,64 +663,64 @@ const handleCheckout = async () => {
         </div>
       </div>
 
-        {successData && (
+      {/* MODAL STRUK */}
+      {successData && (
         <div style={styles.modalOverlay}>
-            <div style={{ ...styles.receiptModal, backgroundColor: theme.cardBg, color: theme.textPrimary }}>
+          <div style={{ ...styles.receiptModal, backgroundColor: theme.cardBg, color: theme.textPrimary }}>
             <div id="printable-receipt" style={{ padding: '10px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                 <CheckCircle size={36} color="#10b981" style={{ margin: '0 auto 6px' }} className="no-print" />
                 <h3 style={{ margin: 0, fontSize: '16px' }}>KASIR SYSTEM</h3>
                 <span style={{ fontSize: '11px', color: theme.textSecondary }}>Struk Pembayaran Official</span>
-                </div>
+              </div>
 
-                <div style={{ fontSize: '11px', borderBottom: '1px dashed #ccc', paddingBottom: '8px', marginBottom: '8px' }}>
+              <div style={{ fontSize: '11px', borderBottom: '1px dashed #ccc', paddingBottom: '8px', marginBottom: '8px' }}>
                 <div>No. Invoice: <b>{successData.invoice_number || successData.invoice_no || successData.id}</b></div>
                 <div>Kasir: {successData.user?.name || successData.cashier_name || 'Admin'}</div>
                 <div>Tanggal: {successData.created_at || new Date().toLocaleString('id-ID')}</div>
                 <div>Metode: {String(successData.payment_method || successData.payment_type).toUpperCase()}</div>
-                </div>
+              </div>
 
-                <div style={{ borderBottom: '1px dashed #ccc', paddingBottom: '8px', marginBottom: '8px' }}>
+              <div style={{ borderBottom: '1px dashed #ccc', paddingBottom: '8px', marginBottom: '8px' }}>
                 {(successData.items || []).map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
                     <span>{item.product?.name || item.product_name || item.name} x{item.qty || item.quantity}</span>
                     <span>Rp {parseFloat(item.subtotal || item.total_price || 0).toLocaleString('id-ID')}</span>
-                    </div>
+                  </div>
                 ))}
-                </div>
+              </div>
 
-                <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={styles.summaryRow}><span>Subtotal</span><span>Rp {parseFloat(successData.subtotal || 0).toLocaleString('id-ID')}</span></div>
                 <div style={styles.summaryRow}><span>Diskon</span><span>Rp {parseFloat(successData.discount || 0).toLocaleString('id-ID')}</span></div>
                 <div style={styles.summaryRow}><span>Pajak</span><span>Rp {parseFloat(successData.tax || 0).toLocaleString('id-ID')}</span></div>
                 <div style={{ ...styles.summaryRow, fontWeight: 'bold', fontSize: '12px', marginTop: '4px' }}>
-                    <span>Grand Total</span>
-                    <span>Rp {parseFloat(successData.grand_total || successData.total || 0).toLocaleString('id-ID')}</span>
+                  <span>Grand Total</span>
+                  <span>Rp {parseFloat(successData.grand_total || successData.total || 0).toLocaleString('id-ID')}</span>
                 </div>
                 <div style={styles.summaryRow}><span>Bayar</span><span>Rp {parseFloat(successData.payment || successData.pay_amount || 0).toLocaleString('id-ID')}</span></div>
                 <div style={styles.summaryRow}><span>Kembali</span><span>Rp {parseFloat(successData.change || successData.change_amount || 0).toLocaleString('id-ID')}</span></div>
-                </div>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }} className="no-print">
-                <button
+              <button
                 onClick={handlePrint}
                 style={{ ...styles.checkoutBtn, backgroundColor: '#2563eb', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                >
+              >
                 <Printer size={14} />
                 <span>Cetak Struk</span>
-                </button>
-                <button
+              </button>
+              <button
                 onClick={() => setSuccessData(null)}
                 style={{ ...styles.checkoutBtn, backgroundColor: theme.inputBg, color: theme.textPrimary, border: `1px solid ${theme.border}`, flex: 1 }}
-                >
+              >
                 Tutup
-                </button>
+              </button>
             </div>
-            </div>
+          </div>
         </div>
-        )}
-            
+      )}
     </div>
   );
 };
@@ -604,7 +749,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    height: '110px', // Ditambah agar teks nama produk tidak terpotong
+    height: '110px',
     boxSizing: 'border-box',
   },
   productCode: { fontSize: '10px', textTransform: 'uppercase' },
