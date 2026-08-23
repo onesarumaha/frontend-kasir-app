@@ -11,7 +11,7 @@ import {
   CheckCircle,
   Printer
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 const Pos = ({ isDarkMode }) => {
   const [products, setProducts] = useState([]);
@@ -55,7 +55,7 @@ const Pos = ({ isDarkMode }) => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/api/categories', {
+      const res = await api.get('/categories', {
         headers: getAuthHeader(),
       });
       if (res.data && res.data.data) {
@@ -70,12 +70,12 @@ const Pos = ({ isDarkMode }) => {
   const fetchProducts = async (categoryName) => {
     setFetchingProducts(true);
     try {
-      let url = 'http://127.0.0.1:8000/api/products';
+      let url = '/products';
       if (categoryName && categoryName !== 'ALL') {
         url += `?category_id=${encodeURIComponent(categoryName)}`;
       }
 
-      const res = await axios.get(url, {
+      const res = await api.get(url, {
         headers: getAuthHeader(),
       });
       if (res.data && res.data.data) {
@@ -180,7 +180,7 @@ const handleCheckout = async () => {
 
   try {
     // 1. Simpan Transaksi
-    const res = await axios.post('http://127.0.0.1:8000/api/sales', payload, {
+    const res = await api.post('/sales', payload, {
       headers: getAuthHeader(),
     });
 
@@ -189,7 +189,7 @@ const handleCheckout = async () => {
 
     if (saleId) {
       // 3. Request Data Struk dari Endpoint Backend
-      const receiptRes = await axios.get(`http://127.0.0.1:8000/api/sales/${saleId}/receipt`, {
+      const receiptRes = await api.get(`/sales/${saleId}/receipt`, {
         headers: getAuthHeader(),
       });
 
