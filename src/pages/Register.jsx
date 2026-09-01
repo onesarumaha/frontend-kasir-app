@@ -237,7 +237,7 @@ const styles = {
 const responsiveCSS = `
   @media (max-width: 640px) {
     .responsive-card {
-      flex-direction: column !important;
+      flex-direction: column-reverse !important;
       min-height: auto !important;
     }
     .banner-hide-mobile {

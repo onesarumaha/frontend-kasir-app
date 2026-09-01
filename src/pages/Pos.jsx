@@ -220,7 +220,6 @@ import { showAlert } from '../utils/sweetalert';
         setSuccessData(res.data?.data || payload);
       }
 
-      // Modal Transaksi Berhasil
       showAlert('success', 'Transaksi Berhasil!', 'Pembayaran telah sukses diproses.');
 
       setCart([]);
@@ -418,13 +417,15 @@ import { showAlert } from '../utils/sweetalert';
               {filteredProducts.map((product) => {
                 const price = parseFloat(product.selling_price) || 0;
                 
-                // Validasi gambar menggunakan API_BASE_URL dari api.js
                 const isValidImage = product.image && typeof product.image === 'string' && !product.image.includes('/tmp');
                 const isValidUrl = product.image_url && typeof product.image_url === 'string' && !product.image_url.includes('/tmp');
 
+                const rawBaseUrl = API_BASE_URL || window.location.origin;
+                const baseUrl = rawBaseUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+
                 const imageUrl = isValidUrl 
                   ? product.image_url 
-                  : (isValidImage ? `${API_BASE_URL}/storage/${product.image}` : null);
+                  : (isValidImage ? `${baseUrl}/storage/${product.image}` : null);
                   
                 const imageDefault = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%2F%3E%3Ccircle%20cx%3D%228.5%22%20cy%3D%228.5%22%20r%3D%221.5%22%2F%3E%3Cpolyline%20points%3D%2221%2015%2016%2010%205%2021%22%2F%3E%3C%2Fsvg%3E';
 
@@ -446,7 +447,6 @@ import { showAlert } from '../utils/sweetalert';
                       boxSizing: 'border-box'
                     }}
                   >
-                    {/* CONTAINER GAMBAR */}
                     <div style={{
                       width: '100%',
                       height: '100px',

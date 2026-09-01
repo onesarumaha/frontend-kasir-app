@@ -30,7 +30,26 @@ const Login = () => {
       <style>{responsiveCSS}</style>
 
       <div style={styles.card} className="responsive-card">
-        {/* Sisi Kiri / Atas: Form Login */}
+        {/* Sisi Kiri / Atas di HP: Banner Biru */}
+        <div style={styles.bannerSection} className="responsive-section banner-hide-mobile">
+          <h3 style={styles.bannerTitle}>APLIKASI KASIR</h3>
+          
+          <div style={{ margin: '15px 0' }}>
+            <svg width="150" height="120" viewBox="0 0 200 180" fill="none">
+              <rect x="25" y="85" width="150" height="85" rx="4" fill="#E53935" />
+              <rect x="80" y="110" width="40" height="20" rx="10" fill="#FFFFFF" />
+              <rect x="70" y="55" width="60" height="35" rx="3" fill="#212121" />
+              <rect x="75" y="60" width="50" height="25" fill="#42A5F5" />
+              <rect x="92" y="72" width="16" height="2" fill="#FFFFFF" />
+              <circle cx="100" cy="28" r="16" fill="#F06292" />
+              <path d="M84 44 C84 40, 116 40, 116 44 L120 70 L80 70 Z" fill="#2E7D32" />
+            </svg>
+          </div>
+
+          <p style={styles.bannerText}>Silahkan login dengan akun anda!</p>
+        </div>
+
+        {/* Sisi Kanan / Bawah di HP: Form Login */}
         <div style={styles.formSection} className="responsive-section">
           <h2 style={styles.title}>Login</h2>
           <p style={styles.subtitle}>Silakan Login</p>
@@ -76,25 +95,6 @@ const Login = () => {
           <p style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
             Belum punya akun? <Link to="/register" style={{ color: '#29a3dd', fontWeight: 'bold' }}>Daftar</Link>
           </p>
-        </div>
-
-        {/* Sisi Kanan / Bawah: Banner Biru */}
-        <div style={styles.bannerSection} className="responsive-section banner-hide-mobile">
-          <h3 style={styles.bannerTitle}>APLIKASI KASIR</h3>
-          
-          <div style={{ margin: '15px 0' }}>
-            <svg width="150" height="120" viewBox="0 0 200 180" fill="none">
-              <rect x="25" y="85" width="150" height="85" rx="4" fill="#E53935" />
-              <rect x="80" y="110" width="40" height="20" rx="10" fill="#FFFFFF" />
-              <rect x="70" y="55" width="60" height="35" rx="3" fill="#212121" />
-              <rect x="75" y="60" width="50" height="25" fill="#42A5F5" />
-              <rect x="92" y="72" width="16" height="2" fill="#FFFFFF" />
-              <circle cx="100" cy="28" r="16" fill="#F06292" />
-              <path d="M84 44 C84 40, 116 40, 116 44 L120 70 L80 70 Z" fill="#2E7D32" />
-            </svg>
-          </div>
-
-          <p style={styles.bannerText}>Silahkan login dengan akun anda!</p>
         </div>
       </div>
     </div>

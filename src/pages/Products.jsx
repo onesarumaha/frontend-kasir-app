@@ -26,23 +26,24 @@ const Products = () => {
 
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    const getImageUrl = (product) => {
+  const getImageUrl = (product) => {
     if (!product) return null;
 
-    // Jika backend sudah mengirim 'image_url' (lengkap dengan http/https)
     if (product.image_url) {
-        return product.image_url;
+      return product.image_url;
     }
 
-    // Jika backend hanya mengirim path kolom 'image' (contoh: "products/abc.jpg")
     if (product.image && typeof product.image === 'string' && !product.image.startsWith('/tmp')) {
-        return `${API_BASE_URL}/storage/${product.image}`;
+      const rawBaseUrl = API_BASE_URL || window.location.origin;
+
+      const baseUrl = rawBaseUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+
+      return `${baseUrl}/storage/${product.image}`;
     }
 
     return null;
-    };
+  };
   
-  // States Pagination
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -147,7 +148,7 @@ const openCreateModal = () => {
     setIsEdit(false);
     setSelectedId(null);
     setImageFile(null);
-    setImagePreview(null); // Reset preview gambar
+    setImagePreview(null); 
     setFormData({
         code: '',
         barcode: '',
@@ -203,13 +204,11 @@ const openCreateModal = () => {
             await api.post(`/products/${selectedId}`, submitData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            // GANTI ALERT BIASA DENGAN TOAST SWEETALERT2
             showToast('success', 'Produk berhasil diperbarui!');
             } else {
             await api.post('/products', submitData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            // GANTI ALERT BIASA DENGAN TOAST SWEETALERT2
             showToast('success', 'Produk berhasil ditambahkan!');
             }
             setShowModal(false);
