@@ -13,7 +13,11 @@ RUN npm run build
 
 FROM nginx:alpine
 
+# Salin hasil build Vite/React
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# SALIN KONFIGURASI NGINX KUSTOM KAMU DI SINI:
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

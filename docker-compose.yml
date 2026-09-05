@@ -1,0 +1,10 @@
+services:
+  frontend:
+    container_name: kasir-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kasir-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8084:80"
