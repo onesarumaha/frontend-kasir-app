@@ -22,7 +22,6 @@ export const showToast = (icon, title) => {
   });
 };
 
-// Helper Confirm Dialog (Dialog Hapus Data)
 export const showConfirmDialog = async (title, text) => {
   return await Swal.fire({
     title: title,
@@ -32,6 +31,24 @@ export const showConfirmDialog = async (title, text) => {
     confirmButtonColor: '#ef4444',
     cancelButtonColor: '#374151',
     confirmButtonText: 'Ya, Hapus!',
+    cancelButtonText: 'Batal',
+    background: '#14141e',
+    color: '#ffffff',
+    customClass: {
+      popup: 'swal2-dark-popup'
+    }
+  });
+};
+
+export const yaLogout = async (title, text) => {
+  return await Swal.fire({
+    title: title,
+    text: text,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#374151',
+    confirmButtonText: 'Logout',
     cancelButtonText: 'Batal',
     background: '#14141e',
     color: '#ffffff',

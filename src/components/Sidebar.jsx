@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, Hash, Package, 
   ChevronDown, ChevronUp, LogOut, ShoppingCart, Store, ShieldCheck 
 } from 'lucide-react';
-
+import { yaLogout } from '../utils/sweetalert';
 const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,7 +27,12 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
   };
 
   const handleLogout = async () => {
-    if (window.confirm('Apakah Anda yakin ingin logout?')) {
+    const confirmed = await yaLogout(
+      'Konfirmasi Logout',
+      'Apakah Anda yakin ingin keluar dari sistem?'
+    );
+
+    if (confirmed) {
       await logout();
       navigate('/login');
     }
