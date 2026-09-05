@@ -17,12 +17,12 @@ import api, { API_BASE_URL } from '../api';
 import { useOutletContext } from 'react-router-dom';
 import { showAlert } from '../utils/sweetalert';
 
-  const Pos = () => {
+const Pos = () => {
   const context = useOutletContext();
   const isDarkMode = context?.isDarkMode ?? true;
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [selectedCategory, setSelectedCategory] = useState('ALL'); 
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -50,21 +50,27 @@ import { showAlert } from '../utils/sweetalert';
     activeTab: '#2563eb',
   };
 
-  // Initial Fetch Kategori
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Fetch Produk saat Kategori yang dipilih berubah
   useEffect(() => {
     setPage(1);
-    fetchProducts(selectedCategory, 1);
+    fetchProducts(selectedCategory, 1, search);
   }, [selectedCategory]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchProducts(selectedCategory, 1, search);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.lastPage) {
       setPage(newPage);
-      fetchProducts(selectedCategory, newPage);
+      fetchProducts(selectedCategory, newPage, search);
     }
   };
 
@@ -73,18 +79,23 @@ import { showAlert } from '../utils/sweetalert';
       const res = await api.get('/categories');
       if (res.data && res.data.data) {
         setCategories(res.data.data);
+      } else if (Array.isArray(res.data)) {
+        setCategories(res.data);
       }
     } catch (err) {
       console.error('Gagal mengambil data kategori:', err);
     }
   };
 
-  const fetchProducts = async (categoryName = selectedCategory, pageNum = 1) => {
+  const fetchProducts = async (categoryId = selectedCategory, pageNum = 1, searchQuery = search) => {
     setFetchingProducts(true);
     try {
       let url = `/products?page=${pageNum}`;
-      if (categoryName && categoryName !== 'ALL') {
-        url += `&category_id=${encodeURIComponent(categoryName)}`;
+      if (categoryId && categoryId !== 'ALL') {
+        url += `&category_id=${encodeURIComponent(categoryId)}`;
+      }
+      if (searchQuery) {
+        url += `&search=${encodeURIComponent(searchQuery)}`;
       }
 
       const res = await api.get(url);
@@ -165,12 +176,6 @@ import { showAlert } from '../utils/sweetalert';
   const paymentAmount = parseFloat(payment) || 0;
   const change = paymentAmount - grandTotal;
 
-  // Filter Client-side untuk fitur Pencarian nama/barcode pada halaman aktif
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.barcode && p.barcode.includes(search))
-  );
-
   const handleCheckout = async () => {
     if (cart.length === 0) {
       showAlert('warning', 'Keranjang Kosong', 'Silakan pilih produk terlebih dahulu!');
@@ -226,7 +231,7 @@ import { showAlert } from '../utils/sweetalert';
       setPayment('');
       setNote('');
       setDiscount(0);
-      fetchProducts(selectedCategory, page);
+      fetchProducts(selectedCategory, page, search);
     } catch (error) {
       showAlert(
         'error', 
@@ -329,38 +334,19 @@ import { showAlert } from '../utils/sweetalert';
           margin-top: 10px;
         }
         @media (max-width: 900px) {
-          .pos-container {
-            flex-direction: column;
-          }
-          .cart-section {
-            width: 100%;
-          }
-          .product-grid {
-            max-height: 350px;
-          }
+          .pos-container { flex-direction: column; }
+          .cart-section { width: 100%; }
+          .product-grid { max-height: 350px; }
         }
         @media print {
-          body * {
-            visibility: hidden;
-          }
-          #printable-receipt, #printable-receipt * {
-            visibility: visible;
-          }
-          #printable-receipt {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .no-print {
-            display: none !important;
-          }
+          body * { visibility: hidden; }
+          #printable-receipt, #printable-receipt * { visibility: visible; }
+          #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none !important; }
         }
       `}</style>
 
-      {/* KOLOM KIRI: KATALOG PRODUK */}
       <div className="catalog-section">
-        {/* Tab Kategori */}
         <div className="category-tabs">
           <button
             className={`category-tab ${selectedCategory === 'ALL' ? 'active' : ''}`}
@@ -368,32 +354,15 @@ import { showAlert } from '../utils/sweetalert';
           >
             Semua
           </button>
-          {categories.length > 0 ? (
-            categories.map((cat) => (
-              <button
-                key={cat.id || cat.name}
-                className={`category-tab ${selectedCategory === (cat.name || cat.id) ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat.name || cat.id)}
-              >
-                {cat.name}
-              </button>
-            ))
-          ) : (
-            <>
-              <button
-                className={`category-tab ${selectedCategory === 'Minuman' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('Minuman')}
-              >
-                Minuman
-              </button>
-              <button
-                className={`category-tab ${selectedCategory === 'Makanan' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('Makanan')}
-              >
-                Makanan
-              </button>
-            </>
-          )}
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              className={`category-tab ${selectedCategory === cat.id ? 'active' : ''}`}
+              onClick={() => setSelectedCategory(cat.id)}
+            >
+              {cat.name}
+            </button>
+          ))}
         </div>
 
         {/* Input Searching */}
@@ -410,11 +379,11 @@ import { showAlert } from '../utils/sweetalert';
 
         {fetchingProducts ? (
             <div style={{ padding: '20px', color: theme.textSecondary, fontSize: '13px' }}>Memuat produk...</div>
-          ) : filteredProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <div style={{ padding: '20px', color: theme.textSecondary, fontSize: '13px' }}>Produk tidak ditemukan.</div>
           ) : (
-            <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
-              {filteredProducts.map((product) => {
+            <div className="product-grid">
+              {products.map((product) => {
                 const price = parseFloat(product.selling_price) || 0;
                 
                 const isValidImage = product.image && typeof product.image === 'string' && !product.image.includes('/tmp');
@@ -538,6 +507,7 @@ import { showAlert } from '../utils/sweetalert';
         )}
       </div>
 
+      {/* KERANJANG & CHECKOUT */}
       <div className="cart-section" style={{ backgroundColor: theme.cardBg }}>
         <div style={{ ...styles.cartHeader, borderColor: theme.border, color: theme.textPrimary }}>
           <ShoppingCart size={18} />

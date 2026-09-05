@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { 
   LayoutDashboard, Users, ShoppingBag, Hash, Package, 
-  Sliders, ShieldCheck, ChevronDown, ChevronUp, LogOut, ShoppingCart 
+  ChevronDown, ChevronUp, LogOut, ShoppingCart 
 } from 'lucide-react';
 
 const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
@@ -56,14 +56,19 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
         position: 'fixed',
         top: '56px',
         left: sidebarOpen ? 0 : '-260px',
-        bottom: 0,
+        height: 'calc(100vh - 56px)',
         zIndex: 99,
         width: '240px',
         transition: 'left 0.3s ease',
         boxShadow: sidebarOpen ? '4px 0 15px rgba(0,0,0,0.3)' : 'none',
-      } : {})
+      } : {
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+      })
     }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      {/* Container utama menu scrollable */}
+      <div style={styles.menuContainer}>
         <button
           onClick={() => navTo('/dashboard')}
           style={{
@@ -125,7 +130,7 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
               </div>
               {openGroups.stock && (
                 <div style={styles.groupItems}>
-                  <button onClick={() => navTo('/categories')} style={{ ...styles.menuItem, backgroundColor: isActive('/categories') ? theme.menuActiveBg : 'transparent', color: isActive('/categories') ? theme.menuActiveText : theme.textSecondary }}>
+                  <button onClick={() => navTo('/category')} style={{ ...styles.menuItem, backgroundColor: isActive('/category') ? theme.menuActiveBg : 'transparent', color: isActive('/category') ? theme.menuActiveText : theme.textSecondary }}>
                     <div style={styles.menuLabel}><Hash size={16} /><span>Categories</span></div>
                   </button>
                   <button onClick={() => navTo('/products')} style={{ ...styles.menuItem, backgroundColor: isActive('/products') ? theme.menuActiveBg : 'transparent', color: isActive('/products') ? theme.menuActiveText : theme.textSecondary }}>
@@ -136,24 +141,40 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
             </div>
           </>
         )}
-      </div>
 
-      <button onClick={handleLogout} style={styles.logoutBtn}>
-        <LogOut size={16} color="#ef4444" />
-        <span style={{ color: '#ef4444', fontWeight: '500' }}>Logout</span>
-      </button>
+        {/* Tombol Logout menyatu di bawah grup menu */}
+        <button onClick={handleLogout} style={styles.logoutBtn}>
+          <LogOut size={16} color="#ef4444" />
+          <span style={{ color: '#ef4444', fontWeight: '500' }}>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };
 
 const styles = {
-  sidebar: { width: '230px', minWidth: '230px', borderRight: '1px solid', padding: '15px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexShrink: 0 },
+  sidebar: { 
+    width: '230px', 
+    minWidth: '230px', 
+    borderRight: '1px solid', 
+    padding: '15px 10px', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    flexShrink: 0,
+    boxSizing: 'border-box'
+  },
+  menuContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    overflowY: 'auto',
+    height: '100%'
+  },
   groupContainer: { display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '10px' },
   groupHeader: { fontSize: '11px', fontWeight: '500', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', cursor: 'pointer' },
   groupItems: { display: 'flex', flexDirection: 'column', gap: '2px' },
   menuItem: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: '6px', border: 'none', fontSize: '13px', cursor: 'pointer', width: '100%', textAlign: 'left' },
   menuLabel: { display: 'flex', alignItems: 'center', gap: '10px' },
-  logoutBtn: { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', backgroundColor: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginTop: '15px' },
+  logoutBtn: { display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', backgroundColor: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginTop: '15px' },
 };
 
 export default Sidebar;

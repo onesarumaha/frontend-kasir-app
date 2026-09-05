@@ -76,12 +76,12 @@ const MainLayout = () => {
 
 const styles = {
   container: {
-    minHeight: '100vh',
+    height: '100vh', // Kunci tinggi layar tepat seukuran viewport browser
     width: '100%',
     maxWidth: '100%',
     display: 'flex',
     flexDirection: 'column',
-    overflowX: 'hidden',
+    overflow: 'hidden', // Matikan scrollbar seluruh halaman/window
   },
 
   bodyWrapper: {
@@ -89,7 +89,7 @@ const styles = {
     flex: 1,
     width: '100%',
     position: 'relative',
-    overflowX: 'hidden',
+    overflow: 'hidden', // Mencegah pemicu scroll luar
   },
 
   mobileOverlay: {
@@ -110,6 +110,7 @@ const styles = {
     gap: '20px',
     width: '100%',
     boxSizing: 'border-box',
+    overflowY: 'auto', 
   },
 };
 

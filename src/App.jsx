@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import MainLayout from './layouts/MainLayout';
 import Pos from './pages/Pos';
 import Products from './pages/Products';
+import Category from './pages/Category';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pos" element={<Pos />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/category" element={<Category />} />
         </Route>
       </Routes>
     </BrowserRouter>

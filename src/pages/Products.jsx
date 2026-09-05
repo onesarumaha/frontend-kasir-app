@@ -234,10 +234,18 @@ const openCreateModal = () => {
 
   return (
     <div style={{ padding: '15px', color: theme.textPrimary, backgroundColor: theme.bg, minHeight: 'calc(100vh - 85px)' }}>
-      {/* HEADER PAGE */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Manajemen Produk</h2>
+          <h2 
+            style={{ 
+              margin: 0, 
+              fontSize: '18px', 
+              fontWeight: 'bold',
+              color: isDarkMode ? '#ffffff' : '#1e293b'
+            }}
+          >
+            Manajemen Produk
+          </h2>
           <span style={{ fontSize: '12px', color: theme.textSecondary }}>Kelola daftar barang, harga, gambar, dan stok toko</span>
         </div>
         <button
