@@ -46,7 +46,7 @@ const Login = () => {
             </svg>
           </div>
 
-          <p style={styles.bannerText}>Silahkan login dengan akun anda!</p>
+          <p style={styles.bannerText}>Login dengan akun anda!</p>
         </div>
 
         {/* Sisi Kanan / Bawah di HP: Form Login */}
