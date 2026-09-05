@@ -6,6 +6,8 @@ import MainLayout from './layouts/MainLayout';
 import Pos from './pages/Pos';
 import Products from './pages/Products';
 import Category from './pages/Category';
+import Tenants from './pages/Tenants';
+import TenantSetting from './pages/TenantSetting';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
           <Route path="/pos" element={<Pos />} />
           <Route path="/products" element={<Products />} />
           <Route path="/category" element={<Category />} />
+          <Route path="/tenants" element={<Tenants />} />
+          <Route path="/setting-toko" element={<TenantSetting />} />
         </Route>
       </Routes>
     </BrowserRouter>

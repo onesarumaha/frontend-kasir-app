@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { 
   LayoutDashboard, Users, ShoppingBag, Hash, Package, 
-  ChevronDown, ChevronUp, LogOut, ShoppingCart 
+  ChevronDown, ChevronUp, LogOut, ShoppingCart, Store, ShieldCheck 
 } from 'lucide-react';
 
 const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
@@ -11,13 +11,15 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
 
+  // Deteksi Role
   const userRole = user?.role?.name?.toLowerCase() || user?.role || 'kasir';
   const isKasir = userRole === 'kasir' || userRole === 'cashier';
+  const isSuperAdmin = userRole === 'superadmin';
 
   const [openGroups, setOpenGroups] = useState({
     transactions: true,
     stock: true,
-    userManagement: true,
+    management: true,
   });
 
   const toggleGroup = (group) => {
@@ -106,6 +108,7 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
           </div>
         ) : (
           <>
+            {/* GRUP TRANSAKSI */}
             <div style={styles.groupContainer}>
               <div style={{ ...styles.groupHeader, color: theme.textSecondary }} onClick={() => toggleGroup('transactions')}>
                 <span>Transactions</span>
@@ -123,6 +126,7 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
               )}
             </div>
 
+            {/* GRUP STOK & PRODUK */}
             <div style={styles.groupContainer}>
               <div style={{ ...styles.groupHeader, color: theme.textSecondary }} onClick={() => toggleGroup('stock')}>
                 <span>Stock</span>
@@ -139,10 +143,31 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
                 </div>
               )}
             </div>
+
+            {/* GRUP MANAJEMEN & TOKO */}
+            <div style={styles.groupContainer}>
+              <div style={{ ...styles.groupHeader, color: theme.textSecondary }} onClick={() => toggleGroup('management')}>
+                <span>Management</span>
+                {openGroups.management ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </div>
+              {openGroups.management && (
+                <div style={styles.groupItems}>
+                  <button onClick={() => navTo('/setting-toko')} style={{ ...styles.menuItem, backgroundColor: isActive('/setting-toko') ? theme.menuActiveBg : 'transparent', color: isActive('/setting-toko') ? theme.menuActiveText : theme.textSecondary }}>
+                    <div style={styles.menuLabel}><Store size={16} /><span>Profil Toko</span></div>
+                  </button>
+
+                  {isSuperAdmin && (
+                    <button onClick={() => navTo('/tenants')} style={{ ...styles.menuItem, backgroundColor: isActive('/tenants') ? theme.menuActiveBg : 'transparent', color: isActive('/tenants') ? theme.menuActiveText : theme.textSecondary }}>
+                      <div style={styles.menuLabel}><ShieldCheck size={16} /><span>Master Tenants</span></div>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </>
         )}
 
-        {/* Tombol Logout menyatu di bawah grup menu */}
+        {/* Tombol Logout */}
         <button onClick={handleLogout} style={styles.logoutBtn}>
           <LogOut size={16} color="#ef4444" />
           <span style={{ color: '#ef4444', fontWeight: '500' }}>Logout</span>
