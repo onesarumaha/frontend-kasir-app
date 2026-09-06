@@ -633,44 +633,110 @@ const Pos = () => {
         </div>
       </div>
 
-      {/* MODAL STRUK */}
       {successData && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.receiptModal, backgroundColor: theme.cardBg, color: theme.textPrimary }}>
-            <div id="printable-receipt" style={{ padding: '10px' }}>
+          <div style={{ ...styles.receiptModal, backgroundColor: theme.cardBg, color: theme.textPrimary, maxWidth: '400px', width: '100%', padding: '20px' }}>
+            
+            <div 
+              id="printable-receipt" 
+              style={{ 
+                backgroundColor: '#ffffff', 
+                color: '#000000', 
+                padding: '12px', 
+                borderRadius: '6px', 
+                fontFamily: 'monospace', 
+                fontSize: '11px', 
+                lineHeight: '1.4' 
+              }}
+            >
               <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                <CheckCircle size={36} color="#10b981" style={{ margin: '0 auto 6px' }} className="no-print" />
-                <h3 style={{ margin: 0, fontSize: '16px' }}>KASIR SYSTEM</h3>
-                <span style={{ fontSize: '11px', color: theme.textSecondary }}>Struk Pembayaran Official</span>
+                {successData.tenant?.logo_url ? (
+                  <img 
+                    src={successData.tenant.logo_url} 
+                    alt="Logo" 
+                    style={{ maxHeight: '45px', maxWidth: '120px', objectFit: 'contain', marginBottom: '6px' }} 
+                  />
+                ) : (
+                  <CheckCircle size={32} color="#10b981" style={{ margin: '0 auto 6px' }} className="no-print" />
+                )}
+                <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  {successData.tenant?.name || 'KASIR SYSTEM'}
+                </h3>
+                {successData.tenant?.address && (
+                  <p style={{ margin: '2px 0 0', fontSize: '10px', color: '#555' }}>{successData.tenant.address}</p>
+                )}
+                <span style={{ fontSize: '10px', color: '#666', display: 'block', marginTop: '2px' }}>Struk Pembayaran Official</span>
               </div>
 
-              <div style={{ fontSize: '11px', borderBottom: '1px dashed #ccc', paddingBottom: '8px', marginBottom: '8px' }}>
-                <div>No. Invoice: <b>{successData.invoice_number || successData.invoice_no || successData.id}</b></div>
-                <div>Kasir: {successData.user?.name || successData.cashier_name || 'Admin'}</div>
-                <div>Tanggal: {successData.created_at || new Date().toLocaleString('id-ID')}</div>
-                <div>Metode: {String(successData.payment_method || successData.payment_type).toUpperCase()}</div>
+              {/* INFORMASI TRANSAKSI */}
+              <div style={{ borderBottom: '1px dashed #777', paddingBottom: '6px', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Invoice:</span><b>{successData.invoice_number}</b></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Kasir:</span><span>{successData.user?.name || 'Admin'}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Tanggal:</span><span>{successData.transaction_date || successData.created_at}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Metode:</span><span>{String(successData.payment_method || 'CASH').toUpperCase()}</span></div>
+                {successData.status && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Status:</span><b>{successData.status === 'canceled' ? 'DIBATALKAN' : 'SUKSES'}</b></div>
+                )}
               </div>
 
-              <div style={{ borderBottom: '1px dashed #ccc', paddingBottom: '8px', marginBottom: '8px' }}>
+              <div style={{ borderBottom: '1px dashed #777', paddingBottom: '6px', marginBottom: '6px' }}>
                 {(successData.items || []).map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
-                    <span>{item.product?.name || item.product_name || item.name} x{item.qty || item.quantity}</span>
-                    <span>Rp {parseFloat(item.subtotal || item.total_price || 0).toLocaleString('id-ID')}</span>
+                  <div key={idx} style={{ marginBottom: '4px' }}>
+                    <div style={{ fontWeight: '600' }}>{item.product_name || item.product?.name || item.name}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '8px', color: '#333' }}>
+                      <span>{item.qty} x Rp {parseFloat(item.price || 0).toLocaleString('id-ID')}</span>
+                      <span>Rp {parseFloat(item.subtotal || 0).toLocaleString('id-ID')}</span>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={styles.summaryRow}><span>Subtotal</span><span>Rp {parseFloat(successData.subtotal || 0).toLocaleString('id-ID')}</span></div>
-                <div style={styles.summaryRow}><span>Diskon</span><span>Rp {parseFloat(successData.discount || 0).toLocaleString('id-ID')}</span></div>
-                <div style={styles.summaryRow}><span>Pajak</span><span>Rp {parseFloat(successData.tax || 0).toLocaleString('id-ID')}</span></div>
-                <div style={{ ...styles.summaryRow, fontWeight: 'bold', fontSize: '12px', marginTop: '4px' }}>
-                  <span>Grand Total</span>
-                  <span>Rp {parseFloat(successData.grand_total || successData.total || 0).toLocaleString('id-ID')}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Subtotal</span>
+                  <span>Rp {parseFloat(successData.subtotal || 0).toLocaleString('id-ID')}</span>
                 </div>
-                <div style={styles.summaryRow}><span>Bayar</span><span>Rp {parseFloat(successData.payment || successData.pay_amount || 0).toLocaleString('id-ID')}</span></div>
-                <div style={styles.summaryRow}><span>Kembali</span><span>Rp {parseFloat(successData.change || successData.change_amount || 0).toLocaleString('id-ID')}</span></div>
+
+                {parseFloat(successData.discount || 0) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Diskon</span>
+                    <span>-Rp {parseFloat(successData.discount || 0).toLocaleString('id-ID')}</span>
+                  </div>
+                )}
+
+                {parseFloat(successData.tax || 0) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Pajak</span>
+                    <span>Rp {parseFloat(successData.tax || 0).toLocaleString('id-ID')}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '12px', borderTop: '1px dashed #777', paddingTop: '4px', marginTop: '2px' }}>
+                  <span>TOTAL</span>
+                  <span>Rp {parseFloat(successData.grand_total || 0).toLocaleString('id-ID')}</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Bayar</span>
+                  <span>Rp {parseFloat(successData.payment || 0).toLocaleString('id-ID')}</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Kembali</span>
+                  <span>Rp {parseFloat(successData.change || 0).toLocaleString('id-ID')}</span>
+                </div>
               </div>
+
+              {successData.note && (
+                <div style={{ marginTop: '6px', paddingTop: '4px', borderTop: '1px dashed #777', fontSize: '10px' }}>
+                  <i>Catatan: {successData.note}</i>
+                </div>
+              )}
+
+              <div style={{ textAlign: 'center', marginTop: '12px', paddingTop: '6px', borderTop: '1px dashed #777', fontSize: '10px', color: '#555' }}>
+                <p style={{ margin: 0 }}>Terima kasih atas kunjungan Anda!</p>
+              </div>
+
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }} className="no-print">
@@ -688,6 +754,7 @@ const Pos = () => {
                 Tutup
               </button>
             </div>
+
           </div>
         </div>
       )}

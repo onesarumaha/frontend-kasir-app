@@ -149,25 +149,49 @@ const Sidebar = ({ isDarkMode, sidebarOpen, setSidebarOpen, isMobile }) => {
               )}
             </div>
 
-            {/* GRUP MANAJEMEN & TOKO */}
             <div style={styles.groupContainer}>
               <div style={{ ...styles.groupHeader, color: theme.textSecondary }} onClick={() => toggleGroup('management')}>
                 <span>Management</span>
                 {openGroups.management ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </div>
-              {openGroups.management && (
-                <div style={styles.groupItems}>
-                  <button onClick={() => navTo('/setting-toko')} style={{ ...styles.menuItem, backgroundColor: isActive('/setting-toko') ? theme.menuActiveBg : 'transparent', color: isActive('/setting-toko') ? theme.menuActiveText : theme.textSecondary }}>
-                    <div style={styles.menuLabel}><Store size={16} /><span>Profil Toko</span></div>
-                  </button>
-
-                  {isSuperAdmin && (
-                    <button onClick={() => navTo('/tenants')} style={{ ...styles.menuItem, backgroundColor: isActive('/tenants') ? theme.menuActiveBg : 'transparent', color: isActive('/tenants') ? theme.menuActiveText : theme.textSecondary }}>
-                      <div style={styles.menuLabel}><ShieldCheck size={16} /><span>Master Tenants</span></div>
+                {openGroups.management && (
+                  <div style={styles.groupItems}>
+                    <button 
+                      onClick={() => navTo('/setting-toko')} 
+                      style={{ 
+                        ...styles.menuItem, 
+                        backgroundColor: isActive('/setting-toko') ? theme.menuActiveBg : 'transparent', 
+                        color: isActive('/setting-toko') ? theme.menuActiveText : theme.textSecondary 
+                      }}
+                    >
+                      <div style={styles.menuLabel}><Store size={16} /><span>Profil Toko</span></div>
                     </button>
-                  )}
-                </div>
-              )}
+
+                    <button 
+                      onClick={() => navTo('/users')} 
+                      style={{ 
+                        ...styles.menuItem, 
+                        backgroundColor: isActive('/users') ? theme.menuActiveBg : 'transparent', 
+                        color: isActive('/users') ? theme.menuActiveText : theme.textSecondary 
+                      }}
+                    >
+                      <div style={styles.menuLabel}><Users size={16} /><span>Users</span></div>
+                    </button>
+
+                    {isSuperAdmin && (
+                      <button 
+                        onClick={() => navTo('/tenants')} 
+                        style={{ 
+                          ...styles.menuItem, 
+                          backgroundColor: isActive('/tenants') ? theme.menuActiveBg : 'transparent', 
+                          color: isActive('/tenants') ? theme.menuActiveText : theme.textSecondary 
+                        }}
+                      >
+                        <div style={styles.menuLabel}><ShieldCheck size={16} /><span>Master Tenants</span></div>
+                      </button>
+                    )}
+                  </div>
+                )}
             </div>
           </>
         )}

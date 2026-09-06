@@ -8,6 +8,8 @@ import Products from './pages/Products';
 import Category from './pages/Category';
 import Tenants from './pages/Tenants';
 import TenantSetting from './pages/TenantSetting';
+import Users from './pages/Users';
+import Orders from './pages/Orders';
 
 function App() {
   return (
@@ -20,10 +22,12 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pos" element={<Pos />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/products" element={<Products />} />
           <Route path="/category" element={<Category />} />
           <Route path="/tenants" element={<Tenants />} />
           <Route path="/setting-toko" element={<TenantSetting />} />
+          <Route path="/users" element={<Users />} />
         </Route>
       </Routes>
     </BrowserRouter>
