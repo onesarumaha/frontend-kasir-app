@@ -7,6 +7,42 @@ export const useAuthStore = create((set) => ({
   loading: false,
   error: null,
 
+  // 1. TAMBAHAN METHOD REGISTER
+  register: async (formData) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await api.post('/register', formData);
+      const resData = response.data;
+
+      if (resData.success) {
+        const { user, token } = resData.data;
+
+        // Simpan token & user ke LocalStorage jika register langsung auto-login
+        if (token && user) {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          set({ user, token });
+        }
+
+        return true;
+      } else {
+        set({ error: resData.message || 'Pendaftaran gagal' });
+        return false;
+      }
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message ||
+        (err.response?.data?.errors
+          ? Object.values(err.response.data.errors).flat().join(', ')
+          : 'Terjadi kesalahan koneksi');
+
+      set({ error: errorMsg });
+      return false;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
   login: async (credentials) => {
     set({ loading: true, error: null });
     try {
@@ -16,35 +52,44 @@ export const useAuthStore = create((set) => ({
       if (resData.success) {
         const { user, token } = resData.data;
 
-        // 1. Simpan ke LocalStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
 
-        // 2. Set State
-        set({ user, token, loading: false });
+        set({ user, token });
 
-        return true; // <-- WAJIB return true agar 'if (success)' di Login.jsx berjalan
+        return true;
       } else {
-        set({ error: resData.message || 'Login gagal', loading: false });
+        set({ error: resData.message || 'Login gagal' });
         return false;
       }
     } catch (err) {
-      set({ 
-        error: err.response?.data?.message || 'Terjadi kesalahan koneksi', 
-        loading: false 
+      set({
+        error: err.response?.data?.message || 'Terjadi kesalahan koneksi',
       });
       return false;
+    } finally {
+      set({ loading: false });
     }
   },
 
   fetchUser: () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) set({ user });
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) set({ user });
+    } catch (e) {
+      console.error('Failed to parse user from localStorage', e);
+    }
   },
 
   logout: async () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    set({ user: null, token: null });
-  }
+    try {
+      await api.post('/logout');
+    } catch (e) {
+      
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      set({ user: null, token: null, error: null });
+    }
+  },
 }));

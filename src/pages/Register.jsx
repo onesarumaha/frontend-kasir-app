@@ -12,6 +12,7 @@ const Register = () => {
     email: '',
     password: '',
     password_confirmation: '',
+    store_name: '',
   });
 
   const handleChange = (e) => {
@@ -39,6 +40,18 @@ const Register = () => {
           {error && <div style={styles.errorMessage}>{error}</div>}
 
           <form onSubmit={handleSubmit} style={styles.form}>
+            <div style={styles.inputGroup}>
+              <div style={styles.iconBox}><User color="#666" size={16} /></div>
+              <input
+                type="text"
+                name="store_name"
+                placeholder="Nama Usaha"
+                value={formData.store_name}
+                onChange={handleChange}
+                required
+                style={styles.input}
+              />
+            </div>
             <div style={styles.inputGroup}>
               <div style={styles.iconBox}><User color="#666" size={16} /></div>
               <input
